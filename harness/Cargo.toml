@@ -1,6 +1,14 @@
 [package]
-name = "harness"
-version = "0.1.0"
-edition = "2024"
+name = "soroban-cost-harness"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Test-time helper that captures per-function Soroban resource cost and emits it as machine-readable JSON for soroban-cost-cli to collect."
 
 [dependencies]
+# testutils is required to read env.cost_estimate() / env.budget() at all —
+# this crate is a [dev-dependency] of the contract being profiled, never a
+# runtime dependency of the contract itself.
+soroban-sdk = { version = "25", features = ["testutils"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
