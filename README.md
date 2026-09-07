@@ -4,13 +4,13 @@ A Rust-native cost profiler for Soroban smart contracts. Runs your test suite, b
 
 ## Why
 
-Soroban contracts are billed per-transaction against fixed network resource limits (CPU instructions, memory, disk I/O, tx size, events). The SDK exposes `env.cost_estimate().budget()` for manual inspection, but it only reports **CPU instructions** and **memory bytes** for the entire budget — there is no built-in way to:
+Soroban contracts are billed per-transaction against fixed network resource limits. The host metering system tracks **five** resource dimensions per invocation — CPU instructions, memory, ledger reads, ledger writes, and event size — but the SDK's `env.cost_estimate().budget()` only exposes CPU and memory. There is no built-in way to:
 
-- Measure individual function costs in isolation
-- Compare usage against real mainnet limits
-- See a ranked report of which functions are closest to hitting the ceiling
+- See all five resource dimensions for an individual function
+- Compare each dimension against real mainnet limits
+- Get a ranked report of which functions are closest to hitting the ceiling
 
-Soroban-Profiler fills that gap. You wrap each function call in a test harness, run the CLI, and get a per-function breakdown with percentages against current mainnet limits, colored by severity.
+Soroban-Profiler fills that gap. You wrap each function call in a test harness, run the CLI, and get a per-function breakdown across all five dimensions with percentages against current mainnet limits, colored by severity.
 
 ## Install
 
@@ -78,6 +78,12 @@ soroban-cost-cli report --manifest-path path/to/your/contract --html report.html
   swap               69443     0.1%           28040     0.1%
   transfer           69441     0.1%           28032     0.1%
   mint               38101     0.0%           17151     0.0%
+
+  label           read bytes     rd %      wr bytes     wr %       events     evt %
+  batch_transfer           0     0.0%           896     0.7%           0     0.0%
+  swap                     0     0.0%           512     0.4%           0     0.0%
+  transfer                 0     0.0%           512     0.4%           0     0.0%
+  mint                     0     0.0%           256     0.2%           0     0.0%
 ```
 
 Colors: green (< 60%), yellow (60-85%), red (> 85%) of the mainnet limit.
@@ -87,11 +93,25 @@ The included [`examples/token-example`](examples/token-example) demonstrates all
 ## How it works
 
 1. The CLI runs `cargo test -- --nocapture` in the target manifest directory
-2. Test output lines prefixed with `##SOROBAN_COST_JSON##` are parsed as `{label, cpu_instructions, memory_bytes}` records
-3. Records are compared against current mainnet limits and displayed as a sorted, color-coded table
+2. Test output lines prefixed with `##SOROBAN_COST_JSON##` are parsed as cost records containing all five resource dimensions
+3. Records are compared against current mainnet limits and displayed as a sorted, color-coded two-section table (compute + I/O)
 4. Optionally, a self-contained HTML report is written (inline CSS, no external assets, opens offline)
 
-## Mainnet resource limits (v0.1 defaults)
+## What is measured
+
+Each `record()` call captures five resource dimensions from the Soroban host's `InvocationResources`:
+
+| Dimension | Source field | Description |
+|---|---|---|
+| CPU instructions | `instructions` | Modelled instruction count |
+| Memory bytes | `mem_bytes` | Peak memory usage |
+| Ledger read bytes | `disk_read_bytes` | Bytes read from disk (restorations, classic entries) |
+| Ledger write bytes | `write_bytes` | Bytes written to the ledger |
+| Events size bytes | `contract_events_size_bytes` | Total size of emitted contract events |
+
+**Note:** Transaction size is not included because the host's `InvocationResources` struct explicitly excludes it — tx size depends on XDR serialization which is not modelled in the test environment.
+
+## Mainnet resource limits
 
 | Resource | Limit |
 |---|---|
@@ -99,26 +119,9 @@ The included [`examples/token-example`](examples/token-example) demonstrates all
 | Memory | 40 MB |
 | Disk read | 200 KB |
 | Disk write | 132 KiB |
-| Tx size | 132 KB |
 | Events return | 16 KB |
 
 These values are periodically adjusted by network vote. See [Stellar resource limits docs](https://developers.stellar.org/docs/networks/resource-limits-fees) for the latest.
-
-## Scope
-
-### v0.1 (current)
-
-Measures **CPU instructions** and **memory bytes** — the two dimensions `env.cost_estimate().budget()` exposes directly and reliably across SDK versions.
-
-### v0.2 (planned)
-
-Additional dimensions from `env.cost_estimate().resources()`:
-
-- Ledger entry reads / writes
-- Transaction size
-- Events size
-
-These require confirming the exact field names on `InvocationResources` for the pinned SDK version (currently soroban-sdk 25).
 
 ## Project structure
 

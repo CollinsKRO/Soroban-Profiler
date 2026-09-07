@@ -3,11 +3,21 @@ use soroban_sdk::Env;
 
 /// Machine-readable cost record emitted to stdout during `cargo test --nocapture`.
 /// The CLI crate greps for the `##SOROBAN_COST_JSON##` prefix to extract these.
+///
+/// All six resource dimensions that Soroban measures per-transaction are
+/// captured here.  Transaction size is **not** included because the host's
+/// `InvocationResources` struct explicitly excludes it (it depends on XDR
+/// serialization which is not modelled in the test environment).
 #[derive(Serialize)]
 pub struct CostRecord {
     pub label: String,
     pub cpu_instructions: u64,
     pub memory_bytes: u64,
+    pub read_entries: u32,
+    pub read_bytes: u32,
+    pub write_entries: u32,
+    pub write_bytes: u32,
+    pub events_size_bytes: u32,
 }
 
 /// Measure the Soroban resource cost of running `f` and emit a JSON line to stdout.
@@ -46,18 +56,24 @@ pub fn record<F, R>(env: &Env, label: &str, f: F) -> R
 where
     F: FnOnce() -> R,
 {
+    // Reset the budget to unlimited so we measure only `f` in isolation.
     let mut budget = env.cost_estimate().budget();
     budget.reset_unlimited();
 
     let result = f();
 
-    let cpu = budget.cpu_instruction_cost();
-    let mem = budget.memory_bytes_cost();
+    // Read the full resource picture from the host's invocation metering.
+    let res = env.cost_estimate().resources();
 
     let rec = CostRecord {
         label: label.to_string(),
-        cpu_instructions: cpu,
-        memory_bytes: mem,
+        cpu_instructions: res.instructions as u64,
+        memory_bytes: res.mem_bytes as u64,
+        read_entries: res.disk_read_entries + res.memory_read_entries,
+        read_bytes: res.disk_read_bytes,
+        write_entries: res.write_entries,
+        write_bytes: res.write_bytes,
+        events_size_bytes: res.contract_events_size_bytes,
     };
 
     println!(

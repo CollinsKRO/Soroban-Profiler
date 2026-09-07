@@ -2,6 +2,7 @@ mod html_report;
 mod limits;
 mod report;
 
+use std::collections::HashMap;
 use std::path::PathBuf;
 use std::process::Command;
 
@@ -30,6 +31,26 @@ enum Commands {
         #[arg(long = "manifest-path")]
         manifest_path: Option<PathBuf>,
     },
+}
+
+/// Disambiguate records that share the same label by appending `_1`, `_2`, etc.
+fn disambiguate_labels(mut records: Vec<CostRecord>) -> Vec<CostRecord> {
+    let mut counts: HashMap<String, usize> = HashMap::new();
+    for rec in &records {
+        *counts.entry(rec.label.clone()).or_insert(0) += 1;
+    }
+
+    // Only rename labels that appear more than once.
+    let mut seen: HashMap<String, usize> = HashMap::new();
+    for rec in &mut records {
+        if counts[&rec.label] > 1 {
+            let idx = seen.entry(rec.label.clone()).or_insert(0);
+            rec.label = format!("{}_{idx}", rec.label);
+            *idx += 1;
+        }
+    }
+
+    records
 }
 
 fn main() -> Result<()> {
@@ -84,11 +105,13 @@ fn main() -> Result<()> {
             "soroban_cost_harness::record(...)".cyan()
         );
         if !output.status.success() {
-            eprintln!("\n--- cargo test stderr ---\n{stderr}");
-            anyhow::bail!("cargo test failed (see above)");
+            eprintln!("\n--- cargo test output ---\n{stderr}");
+            anyhow::bail!("cargo test failed — see error above");
         }
         return Ok(());
     }
+
+    let records = disambiguate_labels(records);
 
     println!(
         "\n{} collected {} cost record(s):\n",
@@ -108,8 +131,11 @@ fn main() -> Result<()> {
     }
 
     if !output.status.success() {
-        eprintln!("\n--- cargo test stderr ---\n{stderr}");
-        anyhow::bail!("cargo test failed (see above)");
+        eprintln!(
+            "\n{} cargo test reported failures (see above).",
+            "warning:".yellow().bold()
+        );
+        anyhow::bail!("cargo test failed — partial results shown above");
     }
 
     Ok(())

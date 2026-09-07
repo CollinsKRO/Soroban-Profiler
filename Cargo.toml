@@ -1,6 +1,18 @@
 [workspace]
 resolver = "2"
-members = ["harness", "cli", "examples/token-example"]
+members = [
+    "harness",
+    "cli",
+    "examples/token-example",
+    "tests/fixtures/panic-contract",
+    "tests/fixtures/duplicate-labels-contract",
+    "tests/fixtures/happy-path-contract",
+]
+
+# The compile-error fixture is intentionally broken — excluded from the
+# workspace so `cargo test --workspace` doesn't fail on it.  The CLI
+# integration tests run `cargo test` against it as a subprocess.
+exclude = ["tests/fixtures/compile-error-contract"]
 
 [workspace.package]
 version = "0.1.0"

@@ -10,18 +10,28 @@ use crate::report::CostRecord;
 ///
 /// The file uses only inline styles, no external assets, no JavaScript —
 /// it opens correctly with zero network access.
-pub fn write_html_report(records: &[CostRecord], limits: &SorobanLimits, path: &Path) -> Result<()> {
+pub fn write_html_report(
+    records: &[CostRecord],
+    limits: &SorobanLimits,
+    path: &Path,
+) -> Result<()> {
+    // Sort worst-first to match the terminal report.
+    let mut sorted: Vec<&CostRecord> = records.iter().collect();
+    sorted.sort_by(|a, b| {
+        let a_max = max_pct(a, limits);
+        let b_max = max_pct(b, limits);
+        b_max.partial_cmp(&a_max).unwrap_or(std::cmp::Ordering::Equal)
+    });
+
     let mut cards = String::new();
 
-    for rec in records {
+    for rec in &sorted {
         let cpu_pct = rec.cpu_instructions as f64 / limits.max_cpu_instructions as f64 * 100.0;
         let mem_pct = rec.memory_bytes as f64 / limits.max_memory_bytes as f64 * 100.0;
-
-        let cpu_color = bar_color(cpu_pct);
-        let mem_color = bar_color(mem_pct);
-
-        let cpu_bar_width = cpu_pct.min(100.0);
-        let mem_bar_width = mem_pct.min(100.0);
+        let rd_pct = rec.read_bytes as f64 / limits.max_disk_read_bytes as f64 * 100.0;
+        let wr_pct = rec.write_bytes as f64 / limits.max_disk_write_bytes as f64 * 100.0;
+        let evt_pct =
+            rec.events_size_bytes as f64 / limits.max_events_return_bytes as f64 * 100.0;
 
         let _ = writeln!(
             cards,
@@ -30,25 +40,55 @@ pub fn write_html_report(records: &[CostRecord], limits: &SorobanLimits, path: &
       <div class="stat">
         <span class="stat-label">CPU Instructions</span>
         <span class="stat-value">{cpu}</span>
-        <span class="stat-pct" style="color:{cpu_color}">{cpu_pct:.1}%</span>
+        <span class="stat-pct" style="color:{cc}">{cpu_pct:.1}%</span>
       </div>
-      <div class="bar-track"><div class="bar-fill" style="width:{cpu_bar_width:.1}%;background:{cpu_color}"></div></div>
+      <div class="bar-track"><div class="bar-fill" style="width:{cbw:.1}%;background:{cc}"></div></div>
       <div class="stat">
         <span class="stat-label">Memory</span>
         <span class="stat-value">{mem}</span>
-        <span class="stat-pct" style="color:{mem_color}">{mem_pct:.1}%</span>
+        <span class="stat-pct" style="color:{mc}">{mem_pct:.1}%</span>
       </div>
-      <div class="bar-track"><div class="bar-fill" style="width:{mem_bar_width:.1}%;background:{mem_color}"></div></div>
+      <div class="bar-track"><div class="bar-fill" style="width:{mbw:.1}%;background:{mc}"></div></div>
+      <div class="stat">
+        <span class="stat-label">Ledger Reads</span>
+        <span class="stat-value">{rd} bytes</span>
+        <span class="stat-pct" style="color:{rdc}">{rd_pct:.1}%</span>
+      </div>
+      <div class="bar-track"><div class="bar-fill" style="width:{rbw:.1}%;background:{rdc}"></div></div>
+      <div class="stat">
+        <span class="stat-label">Ledger Writes</span>
+        <span class="stat-value">{wr} bytes</span>
+        <span class="stat-pct" style="color:{wrc}">{wr_pct:.1}%</span>
+      </div>
+      <div class="bar-track"><div class="bar-fill" style="width:{wrbw:.1}%;background:{wrc}"></div></div>
+      <div class="stat">
+        <span class="stat-label">Events Size</span>
+        <span class="stat-value">{evt} bytes</span>
+        <span class="stat-pct" style="color:{evc}">{evt_pct:.1}%</span>
+      </div>
+      <div class="bar-track"><div class="bar-fill" style="width:{evbw:.1}%;background:{evc}"></div></div>
     </div>"#,
             label = escape_html(&rec.label),
             cpu = rec.cpu_instructions,
-            cpu_color = cpu_color,
+            cc = bar_color(cpu_pct),
             cpu_pct = cpu_pct,
-            cpu_bar_width = cpu_bar_width,
+            cbw = cpu_pct.min(100.0),
             mem = rec.memory_bytes,
-            mem_color = mem_color,
+            mc = bar_color(mem_pct),
             mem_pct = mem_pct,
-            mem_bar_width = mem_bar_width,
+            mbw = mem_pct.min(100.0),
+            rd = rec.read_bytes,
+            rdc = bar_color(rd_pct),
+            rd_pct = rd_pct,
+            rbw = rd_pct.min(100.0),
+            wr = rec.write_bytes,
+            wrc = bar_color(wr_pct),
+            wr_pct = wr_pct,
+            wrbw = wr_pct.min(100.0),
+            evt = rec.events_size_bytes,
+            evc = bar_color(evt_pct),
+            evt_pct = evt_pct,
+            evbw = evt_pct.min(100.0),
         );
     }
 
@@ -130,6 +170,20 @@ pub fn write_html_report(records: &[CostRecord], limits: &SorobanLimits, path: &
 
     std::fs::write(path, html).with_context(|| format!("failed to write {}", path.display()))?;
     Ok(())
+}
+
+/// Highest percentage across all measured dimensions.
+fn max_pct(r: &CostRecord, limits: &SorobanLimits) -> f64 {
+    [
+        r.cpu_instructions as f64 / limits.max_cpu_instructions as f64,
+        r.memory_bytes as f64 / limits.max_memory_bytes as f64,
+        r.read_bytes as f64 / limits.max_disk_read_bytes as f64,
+        r.write_bytes as f64 / limits.max_disk_write_bytes as f64,
+        r.events_size_bytes as f64 / limits.max_events_return_bytes as f64,
+    ]
+    .iter()
+    .copied()
+    .fold(f64::NEG_INFINITY, f64::max)
 }
 
 /// Return a CSS color string based on the percentage thresholds.
