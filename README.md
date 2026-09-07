@@ -15,13 +15,15 @@ Soroban-Profiler fills that gap. You wrap each function call in a test harness, 
 ## Install
 
 ```sh
-cargo install --path cli
+cargo install soroban-cost-cli
 ```
 
-Or run directly from the repo:
+### Build from source (contributors)
 
 ```sh
-cargo run -p cli -- report --manifest-path path/to/your/contract
+git clone https://github.com/CollinsKRO/Soroban-Profiler.git
+cd Soroban-Profiler
+cargo install --path cli
 ```
 
 ## Usage
@@ -30,7 +32,7 @@ cargo run -p cli -- report --manifest-path path/to/your/contract
 
 ```toml
 [dev-dependencies]
-soroban-cost-harness = { git = "https://github.com/CollinsKRO/Soroban-Profiler" }
+soroban-cost-harness = "0.1"
 ```
 
 ### 2. Wrap function calls in `record()`

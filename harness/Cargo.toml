@@ -3,7 +3,11 @@ name = "soroban-cost-harness"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+repository.workspace = true
 description = "Test-time helper that captures per-function Soroban resource cost and emits it as machine-readable JSON for soroban-cost-cli to collect."
+readme = "../README.md"
+keywords = ["soroban", "stellar", "smart-contracts", "profiler", "cost"]
+categories = ["development-tools"]
 
 [dependencies]
 # testutils is required to read env.cost_estimate() / env.budget() at all —
