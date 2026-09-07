@@ -20,7 +20,7 @@ fn run_profiler(fixture_name: &str) -> (bool, String, String) {
 
     let output = Command::new("cargo")
         .args([
-            "run", "-p", "cli", "--", "report", "--manifest-path", &fixture_path,
+            "run", "-p", "soroban-cost-cli", "--", "report", "--manifest-path", &fixture_path,
         ])
         .current_dir(&root)
         .output()
@@ -65,7 +65,7 @@ fn happy_path_html_report() {
         .args([
             "run",
             "-p",
-            "cli",
+            "soroban-cost-cli",
             "--",
             "report",
             "--manifest-path",

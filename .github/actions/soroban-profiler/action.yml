@@ -1,0 +1,125 @@
+name: Soroban Cost Profiler
+description: >
+  Run soroban-cost-cli against a contract, post a 6-dimension resource
+  report as a PR comment, and fail if any dimension exceeds network limits.
+
+inputs:
+  manifest-path:
+    description: Path to the contract's Cargo manifest directory
+    required: true
+  fail-on-exceed:
+    description: Fail the check if any dimension exceeds 100% of the network limit
+    required: false
+    default: "true"
+
+runs:
+  using: composite
+  steps:
+    - name: Run profiler and build comment
+      id: profile
+      shell: bash
+      env:
+        MANIFEST_PATH: ${{ inputs.manifest-path }}
+        FAIL_ON_EXCEED: ${{ inputs.fail-on-exceed }}
+      run: |
+        set -eo pipefail
+
+        # ── 1. Build the CLI from the PR's source ──
+        echo "::group::Building soroban-cost-cli"
+        cargo install --path cli --locked
+        echo "::endgroup::"
+
+        # ── 2. Run the profiler, capture all output ──
+        echo "::group::Running profiler against ${MANIFEST_PATH}"
+        RAW=$(soroban-cost-cli report --manifest-path "$MANIFEST_PATH" 2>&1) || true
+        echo "$RAW"
+        echo "::endgroup::"
+
+        # ── 3. Extract JSON cost records ──
+        JSON=$(echo "$RAW" | grep '^##SOROBAN_COST_JSON##' | sed 's/^##SOROBAN_COST_JSON##//' | jq -s '.')
+
+        if [ "$(echo "$JSON" | jq 'length')" -eq 0 ]; then
+          echo "::warning::No cost records collected from ${MANIFEST_PATH}"
+          TABLE="> No \`##SOROBAN_COST_JSON##\` markers found. Ensure tests call \`soroban_cost_harness::record()\`."
+        else
+          # ── 4. Network limits (must match cli/src/limits.rs) ──
+          CPU_LIMIT=100000000
+          MEM_LIMIT=41943040
+          RD_LIMIT=204800
+          WR_LIMIT=135168
+          EVT_LIMIT=16384
+
+          # ── 5. Build the markdown table ──
+          TABLE=$(printf '%s\n' \
+            "| Function | CPU | CPU % | Memory | Mem % | Read B | Rd % | Write B | Wr % | Events |Evt % |" \
+            "|----------|----:|------:|-------:|------:|-------:|-----:|--------:|-----:|-------:|-----:|")
+
+          EXCEEDED=false
+
+          for row in $(echo "$JSON" | jq -r '
+            .[] |
+            [
+              .label,
+              .cpu_instructions,
+              .memory_bytes,
+              .read_bytes,
+              .write_bytes,
+              .events_size_bytes
+            ] | @tsv
+          '); do
+            IFS=$'\t' read -r label cpu mem rd wr evt <<< "$row"
+
+            cpu_pct=$(awk "BEGIN {printf \"%.1f\", $cpu / $CPU_LIMIT * 100}")
+            mem_pct=$(awk "BEGIN {printf \"%.1f\", $mem / $MEM_LIMIT * 100}")
+            rd_pct=$(awk  "BEGIN {printf \"%.1f\", $rd / $RD_LIMIT * 100}")
+            wr_pct=$(awk  "BEGIN {printf \"%.1f\", $wr / $WR_LIMIT * 100}")
+            evt_pct=$(awk "BEGIN {printf \"%.1f\", $evt / $EVT_LIMIT * 100}")
+
+            # Flag any dimension that exceeds the network limit
+            for pct in "$cpu_pct" "$mem_pct" "$rd_pct" "$wr_pct" "$evt_pct"; do
+              if [ "$(awk "BEGIN {print ($pct > 100.0)}")" = "1" ]; then
+                EXCEEDED=true
+              fi
+            done
+
+            TABLE+=$(printf '\n| %s | %s | %s%% | %s | %s%% | %s | %s%% | %s | %s%% | %s | %s%% |' \
+              "$label" "$cpu" "$cpu_pct" "$mem" "$mem_pct" "$rd" "$rd_pct" "$wr" "$wr_pct" "$evt" "$evt_pct")
+          done
+        fi
+
+        # ── 6. Determine status ──
+        if [ "$EXCEEDED" = "true" ]; then
+          STATUS="🔴 **FAIL** — one or more dimensions exceed the network limit."
+        else
+          STATUS="🟢 **PASS** — all dimensions within network limits."
+        fi
+
+        # ── 7. Compose the comment body and write to file ──
+        {
+          echo "## Soroban Cost Report"
+          echo ""
+          echo "$STATUS"
+          echo ""
+          echo "$TABLE"
+          echo ""
+          echo "<details><summary>Raw output</summary>"
+          echo ""
+          echo '```'
+          echo "$RAW"
+          echo '```'
+          echo "</details>"
+        } > .comment-body.md
+
+        # ── 8. Fail the check if limits exceeded ──
+        if [ "$EXCEEDED" = "true" ] && [ "$FAIL_ON_EXCEED" = "true" ]; then
+          echo "::error::Soroban resource limits exceeded — see PR comment for details."
+          exit 1
+        fi
+
+    - name: Post or update PR comment
+      if: always() && github.event_name == 'pull_request'
+      uses: peter-evans/create-or-update-comment@v4
+      with:
+        comment-tag: soroban-profiler-report
+        body-path: .comment-body.md
+      continue-on-error: true

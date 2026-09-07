@@ -1,0 +1,35 @@
+name: Soroban Profiler
+
+on:
+  pull_request:
+    branches: [main]
+  pull_request_target:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  profile:
+    name: Cost Report
+    runs-on: ubuntu-latest
+    steps:
+      # For pull_request_target (fork PRs), check out the PR branch
+      # explicitly — the default checkout is the base branch.
+      - uses: actions/checkout@v4
+        if: github.event_name == 'pull_request_target'
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - uses: actions/checkout@v4
+        if: github.event_name == 'pull_request'
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Run profiler
+        uses: ./.github/actions/soroban-profiler
+        with:
+          manifest-path: examples/token-example
