@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["harness", "cli"]
+members = ["harness", "cli", "examples/token-example"]
 
 [workspace.package]
 version = "0.1.0"
