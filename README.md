@@ -167,11 +167,3 @@ These values are periodically adjusted by network vote. See [Stellar resource li
 ## License
 
 MIT
-
----
-
-## Image Prompt (for Gemini / AI image generators)
-
-```
-A premium 3D rendered logo mark for "Soroban-Profiler", a developer tool that measures smart contract resource costs. The central element is a translucent hexagonal prism made of frosted glass, tilted at a slight angle, with five thin vertical light bars inside it — each a different color: electric cyan (CPU), lime green (memory), warm amber (reads), hot coral (writes), soft violet (events). The bars have different heights, like an equalizer, with subtle particle dust floating around the tallest bar. The hexagonal prism sits on a flat matte-black reflective surface that shows a faint mirror of the shape below. Behind the prism, a soft radial gradient blooms from deep navy to pure black at the edges. Thin white circuit-trace lines extend outward from the base of the prism across the surface, fading into the darkness. The overall look is minimal, premium, and tight — like a high-end SaaS product logo rendered in Cinema 4D or Blender. No text. No background clutter. Square format. Ultra-sharp edges, photorealistic glass refraction, subtle caustic light patterns on the surface beneath.
-```
