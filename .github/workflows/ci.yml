@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  test:
+    name: Test & Profile
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Run workspace tests
+        run: cargo test --workspace
+
+      - name: Run cost profiler against example contract
+        id: profile
+        run: |
+          report=$(cargo run -p cli -- report --manifest-path examples/token-example --html cost-report.html 2>&1)
+          echo "$report"
+          # Use EOF delimiter to handle multi-line output safely
+          {
+            echo 'report<<PROFILER_EOF'
+            echo "$report"
+            echo 'PROFILER_EOF'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Upload HTML report
+        uses: actions/upload-artifact@v4
+        with:
+          name: cost-report
+          path: cost-report.html
+          retention-days: 30
+
+      # Post the cost report as a PR comment (PRs only).
+      # Uses a comment-tag so repeated pushes update the same comment.
+      - name: Post report to PR
+        if: github.event_name == 'pull_request'
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          comment-tag: soroban-profiler-report
+          body: |
+            ## Soroban Cost Report
+
+            ```
+            ${{ steps.profile.outputs.report }}
+            ```
+
+            [Full HTML report](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) available as a build artifact.
+        continue-on-error: true
