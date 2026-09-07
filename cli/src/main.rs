@@ -1,7 +1,8 @@
+mod html_report;
 mod limits;
 mod report;
 
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::process::Command;
 
 use anyhow::{Context, Result};
@@ -98,7 +99,7 @@ fn main() -> Result<()> {
     report::print_report(&records, &limits::SorobanLimits::default());
 
     if let Some(html_path) = html {
-        write_html(&records, &html_path)?;
+        html_report::write_html_report(&records, &limits::SorobanLimits::default(), &html_path)?;
         println!(
             "\n{} HTML report written to {}",
             "=>".green().bold(),
@@ -111,41 +112,5 @@ fn main() -> Result<()> {
         anyhow::bail!("cargo test failed (see above)");
     }
 
-    Ok(())
-}
-
-fn write_html(records: &[CostRecord], path: &Path) -> Result<()> {
-    let mut rows = String::new();
-    for r in records {
-        rows.push_str(&format!(
-            "<tr><td>{}</td><td>{}</td><td>{}</td></tr>\n",
-            r.label, r.cpu_instructions, r.memory_bytes
-        ));
-    }
-
-    let html = format!(
-        r#"<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<title>Soroban Cost Report</title>
-<style>
-  body {{ font-family: system-ui, sans-serif; margin: 2rem; }}
-  table {{ border-collapse: collapse; }}
-  th, td {{ border: 1px solid #ccc; padding: 0.5rem 1rem; text-align: right; }}
-  th {{ background: #f5f5f5; text-align: left; }}
-</style>
-</head>
-<body>
-<h1>Soroban Cost Report</h1>
-<table>
-<tr><th>label</th><th>cpu_instructions</th><th>memory_bytes</th></tr>
-{rows}
-</table>
-</body>
-</html>"#
-    );
-
-    std::fs::write(path, html).with_context(|| format!("cannot write {}", path.display()))?;
     Ok(())
 }
