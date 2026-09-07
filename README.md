@@ -90,7 +90,31 @@ soroban-cost-cli report --manifest-path path/to/your/contract --html report.html
 
 Colors: green (< 60%), yellow (60-85%), red (> 85%) of the mainnet limit.
 
-The included [`examples/token-example`](examples/token-example) demonstrates all four profiled functions. `batch_transfer` deliberately re-reads the same storage key in a loop to show up as the worst offender.
+### Real-world output: Stellar Liquidity Pool
+
+Profiled against [stellar/soroban-examples](https://github.com/stellar/soroban-examples)
+at tag `v23.0.0` (commit `b46f4e0`) — the official constant-product AMM contract.
+
+```
+=> running `cargo test` in /tmp/profile-liquidity-pool ...
+
+=> collected 3 cost record(s):
+
+  label         cpu       cpu %           mem       mem %
+  deposit     586171       0.6%         85616       0.2%
+  swap        555912       0.6%         78750       0.2%
+  withdraw    591875       0.6%         83071       0.2%
+
+  label       read bytes     rd %      wr bytes     wr %       events     evt %
+  deposit            184     0.1%         1504     1.1%          472     2.9%
+  swap                 0     0.0%         1360     1.0%          472     2.9%
+  withdraw             0     0.0%         1504     1.1%          472     2.9%
+```
+
+All three functions are well within network limits. The `deposit` and `withdraw`
+operations are the most expensive (~586K–592K CPU instructions) due to token
+transfers and share accounting. `swap` is slightly cheaper at ~556K instructions.
+Event size is constant across all three at 472 bytes (2.9% of the 16 KB limit).
 
 ## How it works
 
