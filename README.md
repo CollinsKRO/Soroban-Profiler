@@ -127,25 +127,25 @@ Event size is constant across all three at 472 bytes (2.9% of the 16 KB limit).
 
 Each `record()` call captures five resource dimensions from the Soroban host's `InvocationResources`:
 
-| Dimension | Source field | Description |
-|---|---|---|
-| CPU instructions | `instructions` | Modelled instruction count |
-| Memory bytes | `mem_bytes` | Peak memory usage |
-| Ledger read bytes | `disk_read_bytes` | Bytes read from disk (restorations, classic entries) |
-| Ledger write bytes | `write_bytes` | Bytes written to the ledger |
-| Events size bytes | `contract_events_size_bytes` | Total size of emitted contract events |
+| Dimension          | Source field                 | Description                                          |
+| ------------------ | ---------------------------- | ---------------------------------------------------- |
+| CPU instructions   | `instructions`               | Modelled instruction count                           |
+| Memory bytes       | `mem_bytes`                  | Peak memory usage                                    |
+| Ledger read bytes  | `disk_read_bytes`            | Bytes read from disk (restorations, classic entries) |
+| Ledger write bytes | `write_bytes`                | Bytes written to the ledger                          |
+| Events size bytes  | `contract_events_size_bytes` | Total size of emitted contract events                |
 
 **Note:** Transaction size is not included because the host's `InvocationResources` struct explicitly excludes it — tx size depends on XDR serialization which is not modelled in the test environment.
 
 ## Mainnet resource limits
 
-| Resource | Limit |
-|---|---|
+| Resource         | Limit       |
+| ---------------- | ----------- |
 | CPU instructions | 100,000,000 |
-| Memory | 40 MB |
-| Disk read | 200 KB |
-| Disk write | 132 KiB |
-| Events return | 16 KB |
+| Memory           | 40 MB       |
+| Disk read        | 200 KB      |
+| Disk write       | 132 KiB     |
+| Events return    | 16 KB       |
 
 These values are periodically adjusted by network vote. See [Stellar resource limits docs](https://developers.stellar.org/docs/networks/resource-limits-fees) for the latest.
 
@@ -167,3 +167,11 @@ These values are periodically adjusted by network vote. See [Stellar resource li
 ## License
 
 MIT
+
+---
+
+## Image Prompt (for Gemini / AI image generators)
+
+```
+A premium 3D rendered logo mark for "Soroban-Profiler", a developer tool that measures smart contract resource costs. The central element is a translucent hexagonal prism made of frosted glass, tilted at a slight angle, with five thin vertical light bars inside it — each a different color: electric cyan (CPU), lime green (memory), warm amber (reads), hot coral (writes), soft violet (events). The bars have different heights, like an equalizer, with subtle particle dust floating around the tallest bar. The hexagonal prism sits on a flat matte-black reflective surface that shows a faint mirror of the shape below. Behind the prism, a soft radial gradient blooms from deep navy to pure black at the edges. Thin white circuit-trace lines extend outward from the base of the prism across the surface, fading into the darkness. The overall look is minimal, premium, and tight — like a high-end SaaS product logo rendered in Cinema 4D or Blender. No text. No background clutter. Square format. Ultra-sharp edges, photorealistic glass refraction, subtle caustic light patterns on the surface beneath.
+```
