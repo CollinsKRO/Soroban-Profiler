@@ -91,13 +91,22 @@ fn main() -> Result<()> {
     let stdout = String::from_utf8_lossy(&output.stdout);
     let stderr = String::from_utf8_lossy(&output.stderr);
 
-    let records: Vec<CostRecord> = stdout
-        .lines()
-        .filter_map(|line| {
-            let rest = line.strip_prefix("##SOROBAN_COST_JSON##")?;
-            serde_json::from_str(rest).ok()
-        })
-        .collect();
+    let mut records: Vec<CostRecord> = Vec::new();
+    for line in stdout.lines() {
+        if let Some(rest) = line.strip_prefix("##SOROBAN_COST_JSON##") {
+            match serde_json::from_str(rest) {
+                Ok(rec) => records.push(rec),
+                Err(e) => {
+                    eprintln!(
+                        "{} failed to parse cost record: {} (line: {})",
+                        "warning:".yellow().bold(),
+                        e,
+                        &rest[..rest.len().min(80)]
+                    );
+                }
+            }
+        }
+    }
 
     if records.is_empty() {
         eprintln!(

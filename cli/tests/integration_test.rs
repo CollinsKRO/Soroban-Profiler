@@ -197,3 +197,37 @@ fn compile_error_surfaces_compiler_message() {
         "compiler error message should be surfaced\nstdout: {stdout}\nstderr: {stderr}"
     );
 }
+
+// ---------------------------------------------------------------------------
+// Malformed JSON: a truncated marker line should not crash the CLI — it
+// should log a warning and still process valid records.
+// ---------------------------------------------------------------------------
+
+#[test]
+fn malformed_json_does_not_crash() {
+    let (success, stdout, stderr) = run_profiler("malformed-json-contract");
+
+    // The CLI should succeed (warnings are not errors).
+    assert!(
+        success,
+        "CLI should succeed even with malformed JSON lines\nstderr: {stderr}"
+    );
+
+    // Should collect the valid records (valid_fn + also_valid = 2 records).
+    assert!(
+        stdout.contains("collected 2 cost record(s)"),
+        "should collect 2 valid records despite malformed line\nstdout: {stdout}"
+    );
+
+    // Both valid labels should appear.
+    assert!(
+        stdout.contains("valid_fn") && stdout.contains("also_valid"),
+        "both valid function labels should be present\nstdout: {stdout}"
+    );
+
+    // A warning about the malformed line should be printed.
+    assert!(
+        stderr.contains("failed to parse cost record") || stdout.contains("failed to parse cost record"),
+        "should warn about malformed JSON line\nstdout: {stdout}\nstderr: {stderr}"
+    );
+}
