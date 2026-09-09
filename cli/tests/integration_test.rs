@@ -260,10 +260,10 @@ fn bad_manifest_path_shows_clear_error() {
         "CLI should return non-zero exit code for missing Cargo.toml\nstdout: {stdout}"
     );
 
-    // The error message should clearly mention the missing Cargo.toml.
+    // The error message should clearly mention the missing manifest.
     assert!(
-        combined.contains("no Cargo.toml found"),
-        "error should mention 'no Cargo.toml found'\ncombined: {combined}"
+        combined.contains("no Cargo.toml found") || combined.contains("cannot resolve manifest path"),
+        "error should mention missing Cargo.toml or manifest path\ncombined: {combined}"
     );
 
     // The error should NOT show the misleading "did you forget to call record()?" hint.

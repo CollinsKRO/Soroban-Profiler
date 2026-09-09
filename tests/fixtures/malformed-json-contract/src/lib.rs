@@ -11,6 +11,8 @@ impl MalformedJsonContract {
 
 #[cfg(test)]
 mod tests {
+    extern crate std;
+
     use super::*;
     use soroban_cost_harness::record;
 
