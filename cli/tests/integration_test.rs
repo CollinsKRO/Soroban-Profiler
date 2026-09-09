@@ -231,3 +231,44 @@ fn malformed_json_does_not_crash() {
         "should warn about malformed JSON line\nstdout: {stdout}\nstderr: {stderr}"
     );
 }
+
+// ---------------------------------------------------------------------------
+// Bad manifest path: --manifest-path pointing at a directory with no
+// Cargo.toml should produce a clear error message.
+// ---------------------------------------------------------------------------
+
+#[test]
+fn bad_manifest_path_shows_clear_error() {
+    let root = workspace_root();
+    let fixture_path = format!("{root}/tests/fixtures/no-manifest-dir");
+
+    let output = Command::new("cargo")
+        .args([
+            "run", "-p", "soroban-cost-cli", "--", "report", "--manifest-path", &fixture_path,
+        ])
+        .current_dir(&root)
+        .output()
+        .expect("failed to spawn cargo");
+
+    let stdout = String::from_utf8_lossy(&output.stdout).into_owned();
+    let stderr = String::from_utf8_lossy(&output.stderr).into_owned();
+    let combined = format!("{stdout}{stderr}");
+
+    // The CLI should fail.
+    assert!(
+        !output.status.success(),
+        "CLI should return non-zero exit code for missing Cargo.toml\nstdout: {stdout}"
+    );
+
+    // The error message should clearly mention the missing Cargo.toml.
+    assert!(
+        combined.contains("no Cargo.toml found"),
+        "error should mention 'no Cargo.toml found'\ncombined: {combined}"
+    );
+
+    // The error should NOT show the misleading "did you forget to call record()?" hint.
+    assert!(
+        !combined.contains("did you forget to call record()"),
+        "should not show the zero-records hint for a missing manifest\ncombined: {combined}"
+    );
+}
