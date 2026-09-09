@@ -141,15 +141,15 @@ Event size is constant across all three at 472 bytes (2.9% of the 16 KB limit).
 
 Each `record()` call captures five resource dimensions from the Soroban host's `InvocationResources`:
 
-| Dimension          | Source field                 | Description                                          |
-| ------------------ | ---------------------------- | ---------------------------------------------------- |
-| CPU instructions   | `instructions`               | Modelled instruction count                           |
-| Memory bytes       | `mem_bytes`                  | Peak memory usage                                    |
-| Ledger read bytes  | `disk_read_bytes`            | Bytes read from disk (restorations, classic entries) |
-| Ledger write bytes | `write_bytes`                | Bytes written to the ledger                          |
-| Events size bytes  | `contract_events_size_bytes` | Total size of emitted contract events                |
+| Dimension          | CostRecord field | Limit field            |
+| ------------------ | ---------------- | ---------------------- |
+| CPU instructions   | `cpu_instructions` | `max_cpu_instructions` |
+| Memory bytes       | `memory_bytes` | `max_memory_bytes` |
+| Read bytes         | `read_bytes` | `max_disk_read_bytes` |
+| Write bytes        | `write_bytes` | `max_disk_write_bytes` |
+| Events size bytes  | `events_size_bytes` | `max_events_return_bytes` |
 
-**Note:** Transaction size is not included because the host's `InvocationResources` struct explicitly excludes it — tx size depends on XDR serialization which is not modelled in the test environment.
+**Note:** Transaction size (`max_tx_size_bytes`) is not measured. This is a permanent v1.0 limitation — the host's `InvocationResources` struct does not expose tx size because it depends on XDR serialization, which is not modelled in the test environment.
 
 ## Mainnet resource limits
 
