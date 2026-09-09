@@ -8,7 +8,7 @@
 
 ## What We Need
 
-Our profiler measures 6 resource dimensions (CPU, memory, read bytes, write bytes, tx size, events size). Each needs a network-wide limit for the percentage calculations:
+Our profiler measures 5 resource dimensions (CPU, memory, read bytes, write bytes, events size). Each needs a network-wide limit for the percentage calculations:
 
 | Dimension | Network Config Setting | Ledger Entry Key |
 |-----------|----------------------|------------------|

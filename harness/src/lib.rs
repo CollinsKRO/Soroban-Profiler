@@ -4,7 +4,7 @@ use soroban_sdk::Env;
 /// Machine-readable cost record emitted to stdout during `cargo test --nocapture`.
 /// The CLI crate greps for the `##SOROBAN_COST_JSON##` prefix to extract these.
 ///
-/// All six resource dimensions that Soroban measures per-transaction are
+/// Five of the six resource dimensions that Soroban measures per-transaction are
 /// captured here.  Transaction size is **not** included because the host's
 /// `InvocationResources` struct explicitly excludes it (it depends on XDR
 /// serialization which is not modelled in the test environment).

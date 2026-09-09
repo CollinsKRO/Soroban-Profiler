@@ -1,6 +1,6 @@
 name: Soroban Cost Profiler
 description: >
-  Run soroban-cost-cli against a contract, post a 6-dimension resource
+  Run soroban-cost-cli against a contract, post a 5-dimension resource
   report as a PR comment, and fail if any dimension exceeds network limits.
 
 inputs:
