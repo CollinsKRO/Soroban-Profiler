@@ -30,7 +30,7 @@ mod tests {
     #[test]
     fn malformed_record() {
         // Print a deliberately truncated marker line (cut off mid-JSON)
-        println!("##SOROBAN_COST_JSON##{\"label\":\"bad_fn\",\"cpu_instructions\":1000");
+        std::println!("##SOROBAN_COST_JSON##{{\"label\":\"bad_fn\",\"cpu_instructions\":1000");
         // Also print a valid record from the same test to ensure both are handled
         let env = Env::default();
         let contract_id = env.register(MalformedJsonContract, ());
