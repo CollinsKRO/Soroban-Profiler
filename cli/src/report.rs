@@ -117,3 +117,26 @@ fn colorize_pct(pct: f64) -> String {
         s.green().to_string()
     }
 }
+
+/// Check if any record exceeds the network limits.
+/// Returns true if any dimension exceeds 100% of the limit.
+pub fn check_limits(records: &[CostRecord], limits: &SorobanLimits) -> bool {
+    let mut exceeded = false;
+    for rec in records {
+        let pcts = compute_pcts(rec, limits);
+        if pcts.cpu > 100.0 || pcts.mem > 100.0 || pcts.reads > 100.0 || pcts.writes > 100.0 || pcts.events > 100.0 {
+            exceeded = true;
+            eprintln!(
+                "{} {} exceeds limits: CPU {:.1}%, Mem {:.1}%, Read {:.1}%, Write {:.1}%, Events {:.1}%",
+                "ERROR:".red().bold(),
+                rec.label,
+                pcts.cpu,
+                pcts.mem,
+                pcts.reads,
+                pcts.writes,
+                pcts.events
+            );
+        }
+    }
+    exceeded
+}

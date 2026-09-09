@@ -30,6 +30,10 @@ enum Commands {
         /// Path to the Cargo manifest directory (defaults to current dir)
         #[arg(long = "manifest-path")]
         manifest_path: Option<PathBuf>,
+
+        /// Exit with non-zero status if any function exceeds network limits
+        #[arg(long = "check")]
+        check: bool,
     },
 }
 
@@ -57,9 +61,9 @@ fn main() -> Result<()> {
     let cli = Cli::parse();
 
     let sub = match cli.command {
-        Commands::Report { html, manifest_path } => (html, manifest_path),
+        Commands::Report { html, manifest_path, check } => (html, manifest_path, check),
     };
-    let (html, manifest_path) = sub;
+    let (html, manifest_path, check) = sub;
 
     let manifest_dir = manifest_path.unwrap_or_else(|| PathBuf::from("."));
     let manifest_dir = std::fs::canonicalize(&manifest_dir)
@@ -120,6 +124,13 @@ fn main() -> Result<()> {
     );
 
     report::print_report(&records, &limits::SorobanLimits::default());
+
+    if check {
+        let exceeded = report::check_limits(&records, &limits::SorobanLimits::default());
+        if exceeded {
+            anyhow::bail!("resource limits exceeded — see report above");
+        }
+    }
 
     if let Some(html_path) = html {
         html_report::write_html_report(&records, &limits::SorobanLimits::default(), &html_path)?;
