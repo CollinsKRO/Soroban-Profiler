@@ -12,6 +12,20 @@ Soroban contracts are billed per-transaction against fixed network resource limi
 
 Soroban-Profiler fills that gap. You wrap each function call in a test harness, run the CLI, and get a per-function breakdown across all five dimensions with percentages against current mainnet limits, colored by severity.
 
+### How soroban-cost-profiler differs from soroban-cost-estimator
+
+[soroban-cost-estimator](https://github.com/Stellar-Cost-Labs/soroban-cost-estimator) (Stellar-Cost-Labs) is another project in the Drips Stellar Wave program. They solve a different problem with a different mechanism:
+
+| | soroban-cost-estimator | soroban-cost-profiler |
+| --- | --- | --- |
+| **Mechanism** | Calls `simulateTransaction` against a live network (testnet/mainnet) | Uses the SDK's test-environment `InvocationResources` inside `cargo test` |
+| **Network access** | Required | Not required |
+| **Output** | Actual fee in stroops/XLM per transaction | Per-function resource breakdown across 5 dimensions vs mainnet limits |
+| **Use case** | Post-deployment fee monitoring, network-config drift tracking | Dev-loop / CI profiling on every commit, before deployment |
+| **Contract required** | Must be deployed to a network | No deployment needed — works in tests |
+
+Neither tool replaces the other. soroban-cost-profiler intentionally does **not** compute actual network fees and does **not** track config drift — these are explicit non-goals, not omissions. Use soroban-cost-estimator when you need real fee estimates against live network state; use soroban-cost-profiler when you need fast, offline, per-function resource profiling during development.
+
 ## Install
 
 ```sh
