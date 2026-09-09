@@ -2,6 +2,8 @@
 
 [![Crates.io](https://img.shields.io/crates/v/soroban-cost-cli)](https://crates.io/crates/soroban-cost-cli)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![CI](https://github.com/CollinsKRO/Soroban-Profiler/actions/workflows/ci.yml/badge.svg)](https://github.com/CollinsKRO/Soroban-Profiler/actions/workflows/ci.yml)
+[![Downloads](https://img.shields.io/crates/d/soroban-cost-cli)](https://crates.io/crates/soroban-cost-cli)
 
 > **v1.0.0** — 5-dimension resource profiling for Soroban contracts.
 
