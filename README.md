@@ -1,5 +1,10 @@
 # Soroban-Profiler
 
+[![Crates.io](https://img.shields.io/crates/v/soroban-cost-cli)](https://crates.io/crates/soroban-cost-cli)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+> **v1.0.0** — 5-dimension resource profiling for Soroban contracts.
+
 A Rust-native cost profiler for Soroban smart contracts. Runs your test suite, breaks resource usage down per function, and flags what's close to mainnet's network limits.
 
 ## Why
