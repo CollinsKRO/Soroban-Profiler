@@ -36,12 +36,12 @@ jobs:
       # compile errors.  These run `cargo run -p cli` as a subprocess
       # and verify the profiler handles each scenario correctly.
       - name: Run CLI integration tests
-        run: cargo test -p cli --test integration_test
+        run: cargo test -p soroban-cost-cli --test integration_test
 
       - name: Run cost profiler against example contract
         id: profile
         run: |
-          report=$(cargo run -p cli -- report --manifest-path examples/token-example --html cost-report.html 2>&1)
+          report=$(cargo run -p soroban-cost-cli -- report --manifest-path examples/token-example --html cost-report.html 2>&1)
           echo "$report"
           # Use EOF delimiter to handle multi-line output safely
           {
