@@ -7,6 +7,7 @@ members = [
     "tests/fixtures/panic-contract",
     "tests/fixtures/duplicate-labels-contract",
     "tests/fixtures/happy-path-contract",
+    "tests/fixtures/malformed-json-contract",
 ]
 
 # The compile-error fixture is intentionally broken — excluded from the
