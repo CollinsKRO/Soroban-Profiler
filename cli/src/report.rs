@@ -3,6 +3,7 @@ use owo_colors::OwoColorize;
 use crate::limits::SorobanLimits;
 
 #[derive(serde::Deserialize)]
+#[allow(dead_code)]
 pub struct CostRecord {
     pub label: String,
     pub cpu_instructions: u64,
@@ -49,7 +50,9 @@ pub fn print_report(records: &[CostRecord], limits: &SorobanLimits) {
             .iter()
             .copied()
             .fold(f64::NEG_INFINITY, f64::max);
-        b_max.partial_cmp(&a_max).unwrap_or(std::cmp::Ordering::Equal)
+        b_max
+            .partial_cmp(&a_max)
+            .unwrap_or(std::cmp::Ordering::Equal)
     });
 
     let w = entries
@@ -124,7 +127,12 @@ pub fn check_limits(records: &[CostRecord], limits: &SorobanLimits) -> bool {
     let mut exceeded = false;
     for rec in records {
         let pcts = compute_pcts(rec, limits);
-        if pcts.cpu > 100.0 || pcts.mem > 100.0 || pcts.reads > 100.0 || pcts.writes > 100.0 || pcts.events > 100.0 {
+        if pcts.cpu > 100.0
+            || pcts.mem > 100.0
+            || pcts.reads > 100.0
+            || pcts.writes > 100.0
+            || pcts.events > 100.0
+        {
             exceeded = true;
             eprintln!(
                 "{} {} exceeds limits: CPU {:.1}%, Mem {:.1}%, Read {:.1}%, Write {:.1}%, Events {:.1}%",

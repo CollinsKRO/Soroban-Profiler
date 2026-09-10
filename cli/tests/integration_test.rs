@@ -20,7 +20,13 @@ fn run_profiler(fixture_name: &str) -> (bool, String, String) {
 
     let output = Command::new("cargo")
         .args([
-            "run", "-p", "soroban-cost-cli", "--", "report", "--manifest-path", &fixture_path,
+            "run",
+            "-p",
+            "soroban-cost-cli",
+            "--",
+            "report",
+            "--manifest-path",
+            &fixture_path,
         ])
         .current_dir(&root)
         .output()
@@ -39,7 +45,10 @@ fn run_profiler(fixture_name: &str) -> (bool, String, String) {
 fn happy_path_produces_records() {
     let (success, stdout, stderr) = run_profiler("happy-path-contract");
 
-    assert!(success, "CLI should succeed on happy-path contract\nstderr: {stderr}");
+    assert!(
+        success,
+        "CLI should succeed on happy-path contract\nstderr: {stderr}"
+    );
 
     // The profiler should find exactly 2 cost records (add + noop).
     assert!(
@@ -48,8 +57,14 @@ fn happy_path_produces_records() {
     );
 
     // Both labels should appear in the output.
-    assert!(stdout.contains("add"), "missing 'add' label\nstdout: {stdout}");
-    assert!(stdout.contains("noop"), "missing 'noop' label\nstdout: {stdout}");
+    assert!(
+        stdout.contains("add"),
+        "missing 'add' label\nstdout: {stdout}"
+    );
+    assert!(
+        stdout.contains("noop"),
+        "missing 'noop' label\nstdout: {stdout}"
+    );
 }
 
 #[test]
@@ -191,9 +206,7 @@ fn compile_error_surfaces_compiler_message() {
     // The compiler error should be visible in either stdout or stderr.
     let combined = format!("{stdout}{stderr}");
     assert!(
-        combined.contains("error")
-            || combined.contains("expected")
-            || combined.contains("syntax"),
+        combined.contains("error") || combined.contains("expected") || combined.contains("syntax"),
         "compiler error message should be surfaced\nstdout: {stdout}\nstderr: {stderr}"
     );
 }
@@ -227,7 +240,8 @@ fn malformed_json_does_not_crash() {
 
     // A warning about the malformed line should be printed.
     assert!(
-        stderr.contains("failed to parse cost record") || stdout.contains("failed to parse cost record"),
+        stderr.contains("failed to parse cost record")
+            || stdout.contains("failed to parse cost record"),
         "should warn about malformed JSON line\nstdout: {stdout}\nstderr: {stderr}"
     );
 }
@@ -244,7 +258,13 @@ fn bad_manifest_path_shows_clear_error() {
 
     let output = Command::new("cargo")
         .args([
-            "run", "-p", "soroban-cost-cli", "--", "report", "--manifest-path", &fixture_path,
+            "run",
+            "-p",
+            "soroban-cost-cli",
+            "--",
+            "report",
+            "--manifest-path",
+            &fixture_path,
         ])
         .current_dir(&root)
         .output()
@@ -262,7 +282,8 @@ fn bad_manifest_path_shows_clear_error() {
 
     // The error message should clearly mention the missing manifest.
     assert!(
-        combined.contains("no Cargo.toml found") || combined.contains("cannot resolve manifest path"),
+        combined.contains("no Cargo.toml found")
+            || combined.contains("cannot resolve manifest path"),
         "error should mention missing Cargo.toml or manifest path\ncombined: {combined}"
     );
 

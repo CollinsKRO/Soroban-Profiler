@@ -33,20 +33,18 @@ impl Token {
         let from_balance: i128 = env.storage().persistent().get(&from_key).unwrap_or(0);
         let to_balance: i128 = env.storage().persistent().get(&to_key).unwrap_or(0);
 
-        env.storage().persistent().set(&from_key, &(from_balance - amount));
-        env.storage().persistent().set(&to_key, &(to_balance + amount));
+        env.storage()
+            .persistent()
+            .set(&from_key, &(from_balance - amount));
+        env.storage()
+            .persistent()
+            .set(&to_key, &(to_balance + amount));
     }
 
     /// Swap: transfer `amount_a` of token A from `user` to `to`,
     /// and `amount_b` of token B from `to` to `user`.
     /// Simplified — uses two different storage keys per user to simulate two tokens.
-    pub fn swap(
-        env: Env,
-        user: Address,
-        to: Address,
-        amount_a: i128,
-        amount_b: i128,
-    ) {
+    pub fn swap(env: Env, user: Address, to: Address, amount_a: i128, amount_b: i128) {
         // Read user's A balance
         let user_a_key = DataKey::Balance(user.clone());
         let user_a: i128 = env.storage().persistent().get(&user_a_key).unwrap_or(0);
@@ -86,8 +84,8 @@ impl Token {
 mod tests {
     extern crate std;
 
-    use soroban_sdk::testutils::Address as _;
     use soroban_cost_harness::record;
+    use soroban_sdk::testutils::Address as _;
 
     use super::*;
 

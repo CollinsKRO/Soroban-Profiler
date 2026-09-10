@@ -13,7 +13,10 @@ use owo_colors::OwoColorize;
 use report::CostRecord;
 
 #[derive(Parser)]
-#[command(name = "soroban-cost-cli", about = "Collect Soroban cost data from cargo test")]
+#[command(
+    name = "soroban-cost-cli",
+    about = "Collect Soroban cost data from cargo test"
+)]
 struct Cli {
     #[command(subcommand)]
     command: Commands,
@@ -61,7 +64,11 @@ fn main() -> Result<()> {
     let cli = Cli::parse();
 
     let sub = match cli.command {
-        Commands::Report { html, manifest_path, check } => (html, manifest_path, check),
+        Commands::Report {
+            html,
+            manifest_path,
+            check,
+        } => (html, manifest_path, check),
     };
     let (html, manifest_path, check) = sub;
 
@@ -70,10 +77,7 @@ fn main() -> Result<()> {
         .with_context(|| format!("cannot resolve manifest path: {}", manifest_dir.display()))?;
 
     if !manifest_dir.join("Cargo.toml").exists() {
-        anyhow::bail!(
-            "no Cargo.toml found in {}",
-            manifest_dir.display()
-        );
+        anyhow::bail!("no Cargo.toml found in {}", manifest_dir.display());
     }
 
     println!(

@@ -20,7 +20,9 @@ pub fn write_html_report(
     sorted.sort_by(|a, b| {
         let a_max = max_pct(a, limits);
         let b_max = max_pct(b, limits);
-        b_max.partial_cmp(&a_max).unwrap_or(std::cmp::Ordering::Equal)
+        b_max
+            .partial_cmp(&a_max)
+            .unwrap_or(std::cmp::Ordering::Equal)
     });
 
     let mut cards = String::new();
@@ -30,8 +32,7 @@ pub fn write_html_report(
         let mem_pct = rec.memory_bytes as f64 / limits.max_memory_bytes as f64 * 100.0;
         let rd_pct = rec.read_bytes as f64 / limits.max_disk_read_bytes as f64 * 100.0;
         let wr_pct = rec.write_bytes as f64 / limits.max_disk_write_bytes as f64 * 100.0;
-        let evt_pct =
-            rec.events_size_bytes as f64 / limits.max_events_return_bytes as f64 * 100.0;
+        let evt_pct = rec.events_size_bytes as f64 / limits.max_events_return_bytes as f64 * 100.0;
 
         let _ = writeln!(
             cards,
