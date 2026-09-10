@@ -9,8 +9,12 @@ all-features = true
 version = 2
 yanked = "warn"
 ignore = [
-    # Add advisory IDs here with a comment explaining why, e.g.:
-    # "RUSTSEC-2023-0001", # not exploitable in our usage, see issue #NN
+    # `derivative` is unmaintained but is a transitive dep of ark-* crates
+    # used by soroban-env-host; no safe upgrade path available.
+    "RUSTSEC-2024-0388",
+    # `paste` is unmaintained but is a transitive dep of ark-ff and soroban-wasmi;
+    # no safe upgrade path available.
+    "RUSTSEC-2024-0436",
 ]
 
 [licenses]

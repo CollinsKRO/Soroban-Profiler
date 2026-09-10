@@ -2,6 +2,7 @@
 name = "happy-path-contract"
 version = "0.1.0"
 edition = "2021"
+license.workspace = true
 
 [lib]
 crate-type = ["cdylib"]
@@ -10,5 +11,5 @@ crate-type = ["cdylib"]
 soroban-sdk = { version = "25", features = ["testutils"] }
 
 [dev-dependencies]
-soroban-cost-harness = { path = "../../../harness" }
+soroban-cost-harness = { path = "../../../harness", version = "1.0.0" }
 soroban-sdk = { version = "25", features = ["testutils"] }
