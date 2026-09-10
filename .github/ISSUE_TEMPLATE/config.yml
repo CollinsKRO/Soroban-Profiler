@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Usage question
+    url: https://github.com/CollinsKRO/Soroban-Profiler/discussions
+    about: Ask about how to use the profiler rather than filing a bug.
+  - name: Stellar / Soroban SDK issues
+    url: https://developers.stellar.org
+    about: Issues with the Soroban SDK itself, not this tool, belong upstream.
